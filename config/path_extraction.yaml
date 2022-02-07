@@ -1,0 +1,5 @@
+
+path_directory_name: path           # path file directory
+path_file_name: field_test_01.txt      # will be saved as ${path_file_name}.txt
+
+min_sample_distance: 0.3            # minimum path distance between subsequent path points (m)

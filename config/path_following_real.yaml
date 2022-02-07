@@ -1,0 +1,21 @@
+path_file_name: field_test_01.txt
+platform: real                        # real / sim / turtlebot
+frequency: 20                         # max 20 Hz
+path_frame: /map                      # 
+local_path_step: 13                   # local path step = 0.3 * local_path_length (m) / (real:13 ? ,sim: 30, turtlebot: 5)
+
+# Steering Controller
+vehicle_length: 1.212                 # vehicle Length (m) (car: 2.8)
+initial_lfd: 2.164                    # (car: 5)
+min_lfd: 0.8657                       # (car: 2)
+max_lfd: 13.9857                      # (car: 30)
+
+# PID Controller
+road_friction: 0.60                   # road friction 
+                                      # (Asphalt_dry: 0.8~0.9 / Asphalt_wet: 0.5~0.7)
+                                      # (Dirt road dry: 0.68 / Dirt road wet: 0.55)
+                                      # (snow : 0.2 / Ice : 0.1) 
+reference_velocity: 1.5               # reference velocity. km/h (real and sim: 20 km/h / turtlebot: 1.5 km/h)
+p_gain: 1.0                           # Proportion gain
+i_gain: 0.0                           # Integral gain
+d_gain: 0.05                          # Derivative gain
