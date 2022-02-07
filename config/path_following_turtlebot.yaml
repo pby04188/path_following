@@ -5,6 +5,7 @@
     frequency: 20                         # max 20 Hz
     path_frame: /odom                     # 
     local_path_step: 5                    # local path step = 0.3 * local_path_length (m) / (real/sim: 30, turtlebot: 5)
+    max_speed: 1.2                        # max speed
 
     # Steering Controller
     vehicle_length: 0.28                  # vehicle Length (m) (car: 2.8)

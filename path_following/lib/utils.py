@@ -167,8 +167,8 @@ class purePursuit : ## purePursuit 알고리즘 적용 ##
             self.steering = atan2((2*self.vehicle_length*sin(theta)), self.lfd) #rad
             return self.steering ## Steering 반환 ##
         else : 
-            print("no found forward point")
-            return 0
+            # print("no found forward point")
+            return False
 
     def getEgoVel(self, msg):
         vx = msg.twist.twist.linear.x

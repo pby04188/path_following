@@ -39,7 +39,7 @@ class pose_to_odom(Node):
         self.odom_msg.twist.twist.angular.y = 0.0
         self.odom_msg.twist.twist.angular.z = msg.angular_velocity
         
-        self.yaw = radians(msg.theta)
+        self.yaw = msg.theta
         quaternion = self.get_quaternion_from_euler(0.0, 0.0, self.yaw)
         self.odom_msg.pose.pose.orientation.x = quaternion[0]
         self.odom_msg.pose.pose.orientation.y = quaternion[1]
@@ -48,6 +48,7 @@ class pose_to_odom(Node):
         
         self.odom_msg.pose.covariance = [0.0]*36
         self.odom_msg.twist.covariance = [0.0]*36
+        
         self.odom_pub.publish(self.odom_msg)
         
     def get_quaternion_from_euler(self, roll, pitch, yaw):

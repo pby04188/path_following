@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from sqlite3 import Time
 import sys, os
 import rclpy
 import numpy as np
@@ -9,12 +10,14 @@ from rclpy.qos import QoSProfile
 from rclpy.qos import QoSReliabilityPolicy
 from rclpy.node import Node
 from rclpy.parameter import Parameter
+import time
 
 from nav_msgs.msg import Path, Odometry
-from geometry_msgs.msg import Twist, PoseStamped
+from geometry_msgs.msg import Twist, PoseStamped, TransformStamped
 
 from path_following.lib.utils import pathReader, findLocalPath, purePursuit, pidController, velocityPlanning, vaildObject, cruiseControl
 # from tf2_ros.transform_broadcaster import TransformBroadcaster
+from tf2_msgs.msg import TFMessage
 from math import cos,sin,sqrt,pow,atan2,pi
 
 class pid_planner(Node):
@@ -27,7 +30,8 @@ class pid_planner(Node):
             durability=QoSDurabilityPolicy.VOLATILE)
         self.configure()
         self.is_status=False ## 차량 상태 점검
-
+        self.pub_tf = self.create_publisher(TFMessage, "/tf", QOS_RKL10V)
+        
         # path data reader
         path_reader = pathReader('path_following') ## 경로 파일의 패키지 위치
         self.global_path = path_reader.read_txt(self.path_file_name, self.path_frame) ## 출력할 경로의 이름
@@ -44,7 +48,7 @@ class pid_planner(Node):
         # ros subscriber
         self.status_subscriber = self.create_subscription(Odometry, "/Ego_globalstate", self.statusCB, QOS_RKL10V) ## Vehicl Status Subscriber 
         ## subscribe하는 메세지 타입이 Odometry여야함
-
+        
         # class
         self.pure_pursuit = purePursuit(self.vehicle_length, self.lfd, self.min_lfd, self.max_lfd) ## purePursuit import
         self.pid = pidController(self.p_gain, self.i_gain, self.d_gain, self.control_time)
@@ -53,16 +57,6 @@ class pid_planner(Node):
         self.vel_planner = velocityPlanning(ref_vel, self.road_friction) ## 속도 계획 (reference velocity, friciton)
         self.vel_profile = self.vel_planner.curveBasedVelocity(self.global_path,100)
 
-        # time var
-        # count = 0
-        # if self.is_status==True:
-        #     self.pub_local_path_ctrl_msg()
-
-        #     if count == self.frequency:
-        #         self.global_path_pub.publish(self.global_path)
-        #         count=0
-        #     count+=1
-
     def configure(self):
         # declare parameters
         self.declare_parameter('path_file_name', 'turtlebot.txt')
@@ -70,6 +64,7 @@ class pid_planner(Node):
         self.declare_parameter('frequency', 20)
         self.declare_parameter('path_frame', '/odom')
         self.declare_parameter('local_path_step', 5)
+        self.declare_parameter('max_speed', 1.5)
         self.declare_parameter('vehicle_length', 0.28)
         self.declare_parameter('initial_lfd', 0.5)
         self.declare_parameter('min_lfd', 0.5)
@@ -85,6 +80,7 @@ class pid_planner(Node):
         self.frequency = self.get_parameter("frequency").value
         self.path_frame = self.get_parameter("path_frame").value
         self.local_path_step = self.get_parameter("local_path_step").value
+        self.max_speed = self.get_parameter("max_speed").value
 
         # Steering (purePursuit)
         self.vehicle_length = self.get_parameter("vehicle_length").value
@@ -120,6 +116,8 @@ class pid_planner(Node):
         ego_current_velocity = self.status_msg.twist.twist.linear
         velocity = ego_current_velocity.x
         steering_angle = self.pure_pursuit.steering_angle()
+        if not steering_angle:
+            self.get_logger().info("no found forward point")
         L = self.vehicle_length # vehicle length (m)
 
         self.ctrl_msg.angular.z = velocity * sin(steering_angle) / L  # angular velocity
@@ -128,6 +126,9 @@ class pid_planner(Node):
         ego_current_velocity = self.status_msg.twist.twist.linear
         target_velocity = self.cc.acc(ego_current_velocity, self.vel_profile[self.current_waypoint]) ## advanced cruise control 적용한 속도 계획
         control_input = self.pid.pid(target_velocity, ego_current_velocity) ## 속도 제어를 위한 PID 적용 (target Velocity, Status Velocity)
+        
+        if control_input > self.max_speed:
+            control_input = self.max_speed
 
         if control_input > 0:
             self.ctrl_msg.linear.x = control_input # (km/h)
@@ -138,20 +139,35 @@ class pid_planner(Node):
             self.ctrl_msg.angular.x = 0.0
             self.ctrl_msg.angular.y = 0.0
             self.ctrl_msg.angular.x = 0.0
+            
+    def sendTransform(self, translation, rotation, time, child, parent):
+        t = TransformStamped()
+        t.header.frame_id = parent
+        t.header.stamp = time
+        t.child_frame_id = child
+        t.transform.translation.x = translation[0]
+        t.transform.translation.y = translation[1]
+        t.transform.translation.z = translation[2]
+
+        t.transform.rotation.x = rotation[0]
+        t.transform.rotation.y = rotation[1]
+        t.transform.rotation.z = rotation[2]
+        t.transform.rotation.w = rotation[3]
+        tf = TFMessage()
+        tf.transforms = [t]
+        self.pub_tf.publish(tf)
 
     def statusCB(self, msg): ## Vehicle Status Subscriber 
         self.is_status=True
-
         self.status_msg = msg
         Ego_HeadingAngle = [self.status_msg.pose.pose.orientation.x, self.status_msg.pose.pose.orientation.y, self.status_msg.pose.pose.orientation.z, self.status_msg.pose.pose.orientation.w]
-        
         # Map -> gps TF Broadcaster
         # self.TFsender = TransformBroadcaster()
-        # self.TFsender.sendTransform((self.status_msg.pose.pose.position.x, self.status_msg.pose.pose.position.y, 0),
-        #                 Ego_HeadingAngle,
-        #                 self.get_clock().now(),
-        #                 "gps", # child frame "base_link"
-        #                 "map") # parent frame "map"
+        self.sendTransform([self.status_msg.pose.pose.position.x, self.status_msg.pose.pose.position.y, 0.0],
+                        Ego_HeadingAngle,
+                        self.get_clock().now().to_msg(),
+                        "gps", # child frame "base_link"
+                        "odom") # parent frame "map"
 
         # Odometry history viewer
         last_point = PoseStamped()
@@ -163,31 +179,30 @@ class pid_planner(Node):
         last_point.pose.orientation.z = 0.0
         last_point.pose.orientation.w = 1.0
 
-        self.odometry_path_msg.header.frame_id = "map"
+        self.odometry_path_msg.header.frame_id = self.path_frame
         self.odometry_path_msg.poses.append(last_point)
-        self.odometry_path_pub.publish(self.odometry_path_msg)  
-        count = 0
-        if self.is_status==True:
-            self.pub_local_path_ctrl_msg()
-            self.global_path_pub.publish(self.global_path)
-
-            # if count == self.frequency:
-            #     self.global_path_pub.publish(self.global_path)
-            #     count=0
-            # count+=1
-
+        self.odometry_path_pub.publish(self.odometry_path_msg)
 
     def getEgoVel(self):
         vx = self.status_msg.twist.twist.linear.x
         vy = self.status_msg.twist.twist.linear.y
         return np.sqrt(np.power(vx, 2) + np.power(vy,2))
-
+    
 def main():
     rclpy.init(args=None)
     try:
         node = pid_planner()
         try:
-            rclpy.spin(node)
+            count = 0
+            while rclpy.ok():
+                rclpy.spin_once(node)
+                node.pub_local_path_ctrl_msg()
+                if count == node.frequency:
+                    count=0
+                    node.global_path_pub.publish(node.global_path)
+                count+=1
+                time.sleep(node.control_time)
+                
         except KeyboardInterrupt:
             node.get_logger().info('Keyboard Interrypt (SIGINT)')
         finally:
