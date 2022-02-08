@@ -40,7 +40,9 @@ setup(
     entry_points={
         'console_scripts': [
             'pid_planner = path_following.pid_path_following:main',
-            'pose_to_odom = path_following.pose_to_odom:main'
+            'pose_to_odom = path_following.pose_to_odom:main',
+            'pose_stamped_to_odom = path_following.pose_stamped_to_odom:main',
+            'pose_test = path_following.pose_test:main'
         ],
     }, # {'console_scripts': ['node_name = path_to_python_file:main']}
 )

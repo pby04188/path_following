@@ -42,10 +42,17 @@ def generate_launch_description():
         
         Node(
             package='path_following',
-            node_executable='pose_to_odom',
-            node_name='pose_to_odom',
+            node_executable='pose_stamped_to_odom',
+            node_name='pose_stamped_to_odom',
+            parameters=[param_dir],
             output='screen'),
         
+        Node(
+            package='path_following',
+            node_executable='pose_test',
+            node_name='pose_test',
+            output='screen'),
+
         Node(
             package='turtlesim',
             node_executable='turtlesim_node',

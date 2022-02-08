@@ -19,5 +19,5 @@
                                           # (snow : 0.2 / Ice : 0.1) 
     reference_velocity: 1.5               # reference velocity. km/h (real and sim: 20 km/h / turtlebot: 1.5 km/h)
     p_gain: 1.0                           # Proportion gain
-    i_gain: 0.0                           # Integral gain
+    i_gain: 0.05                          # Integral gain
     d_gain: 0.05                          # Derivative gain
