@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from sqlite3 import Time
 import sys, os
 import rclpy
 import numpy as np
@@ -16,7 +15,6 @@ from nav_msgs.msg import Path, Odometry
 from geometry_msgs.msg import Twist, PoseStamped, TransformStamped
 
 from path_following.lib.utils import pathReader, findLocalPath, purePursuit, pidController, velocityPlanning, vaildObject, cruiseControl
-# from tf2_ros.transform_broadcaster import TransformBroadcaster
 from tf2_msgs.msg import TFMessage
 from math import cos,sin,sqrt,pow,atan2,pi
 
@@ -30,15 +28,16 @@ class pid_planner(Node):
             durability=QoSDurabilityPolicy.VOLATILE)
         self.configure()
         self.is_status=False ## 차량 상태 점검
-        self.pub_tf = self.create_publisher(TFMessage, "/tf", QOS_RKL10V)
+        self.pub_tf = self.create_publisher(TFMessage, "/tf", QOS_RKL10V)  ## dashing에서 tf2 모듈을 지원하지 않기 때문에 직접 TFMessage를 publish
         
         # path data reader
         path_reader = pathReader('path_following') ## 경로 파일의 패키지 위치
         self.global_path = path_reader.read_txt(self.path_file_name, self.path_frame) ## 출력할 경로의 이름
 
-        # ris cmd publisher
+        # cmd publisher
         self.ctrl_pub = self.create_publisher(Twist, '/ctrl_cmd', QOS_RKL10V)
         self.ctrl_msg = Twist()
+        ## Twist 메시지로 publish하므로 실제로 deepracer가 해당 선속도와 각속도로 주행하도록 해야함
 
         self.global_path_pub = self.create_publisher(Path, '/global_path', QOS_RKL10V) ## global_path publisher
         self.local_path_pub = self.create_publisher(Path, '/local_path', QOS_RKL10V) ## local_path publisher
@@ -64,7 +63,6 @@ class pid_planner(Node):
         self.declare_parameter('frequency', 20)
         self.declare_parameter('path_frame', '/odom')
         self.declare_parameter('local_path_step', 5)
-        self.declare_parameter('max_speed', 1.5)
         self.declare_parameter('vehicle_length', 0.28)
         self.declare_parameter('initial_lfd', 0.5)
         self.declare_parameter('min_lfd', 0.5)
@@ -80,7 +78,6 @@ class pid_planner(Node):
         self.frequency = self.get_parameter("frequency").value
         self.path_frame = self.get_parameter("path_frame").value
         self.local_path_step = self.get_parameter("local_path_step").value
-        self.max_speed = self.get_parameter("max_speed").value
 
         # Steering (purePursuit)
         self.vehicle_length = self.get_parameter("vehicle_length").value
@@ -127,9 +124,6 @@ class pid_planner(Node):
         target_velocity = self.cc.acc(ego_current_velocity, self.vel_profile[self.current_waypoint]) ## advanced cruise control 적용한 속도 계획
         control_input = self.pid.pid(target_velocity, ego_current_velocity) ## 속도 제어를 위한 PID 적용 (target Velocity, Status Velocity)
         
-        if control_input > self.max_speed:
-            control_input = self.max_speed
-
         if control_input > 0:
             self.ctrl_msg.linear.x = control_input # (km/h)
         else :
@@ -162,7 +156,6 @@ class pid_planner(Node):
         self.status_msg = msg
         Ego_HeadingAngle = [self.status_msg.pose.pose.orientation.x, self.status_msg.pose.pose.orientation.y, self.status_msg.pose.pose.orientation.z, self.status_msg.pose.pose.orientation.w]
         # Map -> gps TF Broadcaster
-        # self.TFsender = TransformBroadcaster()
         self.sendTransform([self.status_msg.pose.pose.position.x, self.status_msg.pose.pose.position.y, 0.0],
                         Ego_HeadingAngle,
                         self.get_clock().now().to_msg(),

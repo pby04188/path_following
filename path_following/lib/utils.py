@@ -249,95 +249,95 @@ class cruiseControl: ## ACC(advanced cruise control) 적용 ##
     def acc(self, ego_vel, target_vel): ## advanced cruise control 를 이용한 속도 계획 ##
         out_vel=target_vel
         pre_out_vel = out_vel
-        """
-        if self.object[0] == True :
-            print("ACC ON_vehicle")   
-            front_vehicle=[local_vaild_object[self.object[1]][1],local_vaild_object[self.object[1]][2],local_vaild_object[self.object[1]][3]]
-            time_gap=0.8
-            default_space=5
-            dis_safe=ego_vel* time_gap+default_space
-            dis_rel=sqrt(pow(front_vehicle[0],2)+pow(front_vehicle[1],2))-3 
+        
+        # if self.object[0] == True :
+        #     print("ACC ON_vehicle")   
+        #     front_vehicle=[local_vaild_object[self.object[1]][1],local_vaild_object[self.object[1]][2],local_vaild_object[self.object[1]][3]]
+        #     time_gap=0.8
+        #     default_space=5
+        #     dis_safe=ego_vel* time_gap+default_space
+        #     dis_rel=sqrt(pow(front_vehicle[0],2)+pow(front_vehicle[1],2))-3 
             
-            vel_rel=(front_vehicle[2]-ego_vel)  
+        #     vel_rel=(front_vehicle[2]-ego_vel)  
             
-            v_gain=self.object_vel_gain
-            x_errgain=self.object_dis_gain
-            acceleration=vel_rel*v_gain - x_errgain*(dis_safe-dis_rel)
+        #     v_gain=self.object_vel_gain
+        #     x_errgain=self.object_dis_gain
+        #     acceleration=vel_rel*v_gain - x_errgain*(dis_safe-dis_rel)
 
-            acc_based_vel=ego_vel+acceleration
+        #     acc_based_vel=ego_vel+acceleration
             
-            if acc_based_vel > target_vel : 
-                acc_based_vel=target_vel
+        #     if acc_based_vel > target_vel : 
+        #         acc_based_vel=target_vel
             
-            if dis_safe-dis_rel >0 :
-                out_vel=acc_based_vel
-            else :
-                if acc_based_vel<target_vel :
-                    out_vel=acc_based_vel
+        #     if dis_safe-dis_rel >0 :
+        #         out_vel=acc_based_vel
+        #     else :
+        #         if acc_based_vel<target_vel :
+        #             out_vel=acc_based_vel
 
-            dx = front_vehicle[0]
-            dy = front_vehicle[1]
+        #     dx = front_vehicle[0]
+        #     dy = front_vehicle[1]
 
-            t_dis = sqrt(pow(dx,2)+pow(dy,2))
+        #     t_dis = sqrt(pow(dx,2)+pow(dy,2))
 
-        if self.Person[0]==True:
-            print("ACC ON_person")
-            Pedestrian=[local_vaild_object[self.Person[1]][1],local_vaild_object[self.Person[1]][2],local_vaild_object[self.Person[1]][3]]
-            time_gap=0.8
-            default_space=8
-            dis_safe=ego_vel* time_gap+default_space
-            dis_rel=sqrt(pow(Pedestrian[0],2)+pow(Pedestrian[1],2))-3
+        # if self.Person[0]==True:
+        #     print("ACC ON_person")
+        #     Pedestrian=[local_vaild_object[self.Person[1]][1],local_vaild_object[self.Person[1]][2],local_vaild_object[self.Person[1]][3]]
+        #     time_gap=0.8
+        #     default_space=8
+        #     dis_safe=ego_vel* time_gap+default_space
+        #     dis_rel=sqrt(pow(Pedestrian[0],2)+pow(Pedestrian[1],2))-3
             
-            vel_rel=(Pedestrian[2]-ego_vel)  
+        #     vel_rel=(Pedestrian[2]-ego_vel)  
             
-            v_gain=self.object_vel_gain
-            x_errgain=self.object_dis_gain
-            acceleration=vel_rel*v_gain - x_errgain*(dis_safe-dis_rel)    
+        #     v_gain=self.object_vel_gain
+        #     x_errgain=self.object_dis_gain
+        #     acceleration=vel_rel*v_gain - x_errgain*(dis_safe-dis_rel)    
 
-            acc_based_vel=ego_vel+acceleration
+        #     acc_based_vel=ego_vel+acceleration
             
-            if acc_based_vel > target_vel : 
-                acc_based_vel=target_vel
+        #     if acc_based_vel > target_vel : 
+        #         acc_based_vel=target_vel
             
-            if dis_safe-dis_rel >0 :
-                out_vel=acc_based_vel - 5
-            else :
-                if acc_based_vel<target_vel :
-                    out_vel=acc_based_vel
-            dx =  Pedestrian[0]
-            dy =  Pedestrian[1]
+        #     if dis_safe-dis_rel >0 :
+        #         out_vel=acc_based_vel - 5
+        #     else :
+        #         if acc_based_vel<target_vel :
+        #             out_vel=acc_based_vel
+        #     dx =  Pedestrian[0]
+        #     dy =  Pedestrian[1]
 
-            t_dis = sqrt(pow(dx,2)+pow(dy,2))
+        #     t_dis = sqrt(pow(dx,2)+pow(dy,2))
 
 
-        if self.traffic[0] == True :
-            print("Traffic_ON")   
-            front_vehicle=[local_vaild_object[self.traffic[1]][1],local_vaild_object[self.traffic[1]][2],local_vaild_object[self.traffic[1]][3]]
-            time_gap=0.8
-            default_space=3
-            dis_safe=ego_vel* time_gap+default_space
-            dis_rel=sqrt(pow(front_vehicle[0],2)+pow(front_vehicle[1],2))-3
+        # if self.traffic[0] == True :
+        #     print("Traffic_ON")   
+        #     front_vehicle=[local_vaild_object[self.traffic[1]][1],local_vaild_object[self.traffic[1]][2],local_vaild_object[self.traffic[1]][3]]
+        #     time_gap=0.8
+        #     default_space=3
+        #     dis_safe=ego_vel* time_gap+default_space
+        #     dis_rel=sqrt(pow(front_vehicle[0],2)+pow(front_vehicle[1],2))-3
             
-            vel_rel=(0-ego_vel)  
+        #     vel_rel=(0-ego_vel)  
             
-            v_gain=self.object_vel_gain
-            x_errgain=self.object_dis_gain
-            acceleration=vel_rel*v_gain - x_errgain*(dis_safe-dis_rel)    
+        #     v_gain=self.object_vel_gain
+        #     x_errgain=self.object_dis_gain
+        #     acceleration=vel_rel*v_gain - x_errgain*(dis_safe-dis_rel)    
 
-            acc_based_vel=ego_vel+acceleration
+        #     acc_based_vel=ego_vel+acceleration
             
-            if acc_based_vel > target_vel : 
-                acc_based_vel=target_vel
+        #     if acc_based_vel > target_vel : 
+        #         acc_based_vel=target_vel
             
-            if dis_safe-dis_rel >0 :
-                out_vel=acc_based_vel
-            else :
-                if acc_based_vel<target_vel :
-                    out_vel=acc_based_vel
+        #     if dis_safe-dis_rel >0 :
+        #         out_vel=acc_based_vel
+        #     else :
+        #         if acc_based_vel<target_vel :
+        #             out_vel=acc_based_vel
 
-            if dis_rel < 3 :
-                out_vel = 0
-        """
+        #     if dis_rel < 3 :
+        #         out_vel = 0
+        
         
         return out_vel
 
@@ -410,7 +410,7 @@ class pidController : ## 속도 제어를 위한 PID 적용 ##
         
         p_control=self.p_gain*error
         self.i_control+=self.i_gain*error*self.controlTime
-        d_control=self.d_gain*(error-self.prev_error)/self.controlTime
+        d_control=-self.d_gain*(error-self.prev_error)/self.controlTime
 
         output=p_control+self.i_control+d_control
         self.prev_error=error
