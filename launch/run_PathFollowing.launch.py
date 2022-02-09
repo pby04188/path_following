@@ -40,10 +40,17 @@ def generate_launch_description():
             output='screen',
             remappings=[('/ctrl_cmd', '/turtle1/cmd_vel')]),
         
+        # Node(
+        #     package='path_following',
+        #     node_executable='pose_to_odom',
+        #     node_name='pose_to_odom',
+        #     parameters=[param_dir],
+        #     output='screen'),
+        
         Node(
             package='path_following',
-            node_executable='pose_stamped_to_odom',
-            node_name='pose_stamped_to_odom',
+            node_executable='pose_stamped_subscriber',
+            node_name='pose_stamped_subscriber',
             parameters=[param_dir],
             output='screen'),
         

@@ -406,7 +406,7 @@ class pidController : ## 속도 제어를 위한 PID 적용 ##
 
 
     def pid(self, target_vel, current_vel):
-        error= target_vel - current_vel.x
+        error= target_vel - current_vel
         
         p_control=self.p_gain*error
         self.i_control+=self.i_gain*error*self.controlTime

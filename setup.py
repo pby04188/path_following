@@ -41,8 +41,9 @@ setup(
         'console_scripts': [
             'pid_planner = path_following.pid_path_following:main',
             'pose_to_odom = path_following.pose_to_odom:main',
-            'pose_stamped_to_odom = path_following.pose_stamped_to_odom:main',
-            'pose_test = path_following.pose_test:main'
+            'pose_stamped_subscriber = path_following.pose_stamped_subscriber:main',
+            'pose_test = path_following.pose_test:main',
+            'deepracer_core = path_following.core:main'
         ],
     }, # {'console_scripts': ['node_name = path_to_python_file:main']}
 )

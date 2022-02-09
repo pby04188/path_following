@@ -122,7 +122,7 @@ class pid_planner(Node):
     def get_control_velocity(self):
         ego_current_velocity = self.status_msg.twist.twist.linear
         target_velocity = self.cc.acc(ego_current_velocity, self.vel_profile[self.current_waypoint]) ## advanced cruise control 적용한 속도 계획
-        control_input = self.pid.pid(target_velocity, ego_current_velocity) ## 속도 제어를 위한 PID 적용 (target Velocity, Status Velocity)
+        control_input = self.pid.pid(target_velocity, ego_current_velocity.x) ## 속도 제어를 위한 PID 적용 (target Velocity, Status Velocity)
         
         if control_input > 0:
             self.ctrl_msg.linear.x = control_input # (km/h)

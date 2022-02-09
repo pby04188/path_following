@@ -12,12 +12,12 @@ from rclpy.parameter import Parameter
 import time
 
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Twist
 from path_following.lib.current_vel import get_current_vel
 
-class pose_stamped_to_odom(Node):
+class pose_stamped_subscriber(Node):
     def __init__(self):
-        super().__init__('pose_stamped_to_odom')
+        super().__init__('pose_stamped_subscriber')
         QOS_RKL10V = QoSProfile(
             reliability=QoSReliabilityPolicy.RELIABLE,
             history=QoSHistoryPolicy.KEEP_LAST,
@@ -48,9 +48,19 @@ class pose_stamped_to_odom(Node):
         self.prev_y = 0.0
         self.prev_yaw = 0.0
         self.status = False
+        
+        ## Twist 메시지 초기화
+        self.twist_msg = Twist()
+        self.twist_msg.linear.x = 0.0
+        self.twist_msg.linear.y = 0.0
+        self.twist_msg.linear.z = 0.0
+        self.twist_msg.angular.x = 0.0
+        self.twist_msg.angular.y = 0.0
+        self.twist_msg.angular.z = 0.0
 
         self.pose_sub = self.create_subscription(PoseStamped, '/Rigidbody', self.callback, QOS_RKL10V)
         self.odom_pub = self.create_publisher(Odometry, "/Ego_globalstate", QOS_RKL10V)
+        self.twist_pub = self.create_publisher(Twist, "/deepracer/current_vel", QOS_RKL10V)
         
     def callback(self, msg):
         ## Pose 메시지를 받는 즉시 Odometry 메시지로 변환하여 보내기 위해 callback함수에서 바로 publish
@@ -70,7 +80,12 @@ class pose_stamped_to_odom(Node):
             self.odom_msg.twist.twist.linear.x = linear_vel
             self.odom_msg.twist.twist.angular.z = angular_vel
             
+            self.twist_msg.linear.x = linear_vel
+            self.twist_msg.angular.z = angular_vel
+            
             self.odom_pub.publish(self.odom_msg)
+            self.twist_pub.publish(self.twist_msg)
+            
         self.prev_x = msg.pose.position.x
         self.prev_y = msg.pose.position.y
         self.prev_yaw = yaw
@@ -97,7 +112,7 @@ class pose_stamped_to_odom(Node):
 def main():
     rclpy.init(args=None)
     try:
-        node = pose_stamped_to_odom()
+        node = pose_stamped_subscriber()
         try:
             while rclpy.ok():
                 rclpy.spin_once(node)
